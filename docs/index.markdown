@@ -4,7 +4,9 @@
 
 layout: home
 ---
-This is the home page for our DSC 180 Capstone project. See our github repo [here](https://github.com/pnagasam/dsc180a_capstone_project){:target="_blank"}.
+This is the home page for our DSC 180 Capstone project. See our github repo [here](https://github.com/pnagasam/dsc180a_capstone_project){:target="_blank"}. See our project report [here](/assets/ot_african_satelite.pdf){:target="_blank"}.
+
+_By_ Priyanka Nagasamudra, Luke Lloyd
 
 
 # Abstract
