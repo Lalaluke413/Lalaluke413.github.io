@@ -4,13 +4,13 @@
 
 layout: home
 ---
-This is the home page for our DSC 180 Capstone project. See our github repo [here](https://github.com/pnagasam/dsc180a_capstone_project){:target="_blank"}. See our project report [here](/assets/ot_african_satelite.pdf){:target="_blank"}.
+This is the home page for our DSC 180 Capstone project. See our github repo [here](https://github.com/pnagasam/dsc180a_capstone_project){:target="_blank"}. See our project report [here](/assets/ot_african_satellite.pdf){:target="_blank"}.
 
 _By_ Priyanka Nagasamudra, Luke Lloyd
 
 
 # Abstract
-Unsupervised domain adaptation is an important problem in machine learning. Machine learning models trained on a certain dataset often are tested on datasets that are drawn from a different distribution. The aim of our work is to find methods to provide the same performance of the machine learning model on a test distribution as the train distribution. Optimal Transport is the new We propose using optimal transport to achieve this and demonstrate results on a model used to asses poverty in Africa.
+Unsupervised domain adaptation is an important problem in machine learning. Machine learning models trained on a certain dataset often are tested on datasets that are drawn from a different distribution. The aim of our work is to find methods to provide the same performance of the machine learning model on a test distribution as the train distribution. We propose using optimal transport to achieve this and demonstrate results on a model used to asses poverty in Africa.
 
 # Dataset
 [![](/assets/dataset.png)](https://wilds.stanford.edu/){:target="_blank"}
