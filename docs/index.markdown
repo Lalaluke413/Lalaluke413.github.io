@@ -4,72 +4,83 @@
 
 layout: home
 ---
-Decision trees are a powerful tool for many classification tasks across a variety of domains. One major challenge that decision tree models face is transferability from one dataset to another. Trasferalbility across datasets is the key to developing generalizable models. Prior approaches have tried to bound uncertainty and find the confidence interval of the decision tree boundaries. However, there approaches do not also take into consideration the data itself. Other that we will focus on here are in shifting the data itself. Many domain adaptation examples rely on optimal transport.
-In this paper, we propose to use optimal transport to pre-process the data in the context of satellite images over various countries to asses their poverty level such that the training data used for a decision tree to asses poverty in one country can be transferred over to another. Specifically we will use Sinkhorn transport as preprocessing for our decision tree and evaluate our model based on other models.
+This is the home page for our DSC 180 Capstone project. See our github repo [here](https://github.com/pnagasam/dsc180a_capstone_project){:target="_blank"}.
 
-# Introduction
-One of the important issues in machine learning and many other domains today is the ability to train on one distribution and test on a different one. It is also called dataset shift. The problem of dataset shift can stem from the way input features are utilized, the way training and test sets are selected, data sparsity, shifts in the data distribution due to non-stationary environments, and also from changes in the activation patterns within layers of deep neural networks. Many companies are working on dealing with this problem, such as Amazon published a paper called CrossNorm and SelfNorm for generalization under distribution shifts in 2021 and Apple published a paper called Bridging the Domain Gap for Neural Model.
 
-A different application of satellite imagery is poverty estimation across different spatial regions, which is essential for targeted humanitarian efforts in poor regions. However, ground-truth measurements of poverty are lacking for much of the developing world, as field surveys are expensive. One approach to this problem is to train ML models on countries with ground truth labels and then deploy them to different countries where we have satellite data but no labels. This is closely related to the problem of domain adaptation above and in this paper we will use the satellite images from the WILDS dataset to implement a domain adaptation by using optimal transport methods to train our models to predict the wealth index.
+# Abstract
+Unsupervised domain adaptation is an important problem in machine learning. Machine learning models trained on a certain dataset often are tested on datasets that are drawn from a different distribution. The aim of our work is to find methods to provide the same performance of the machine learning model on a test distribution as the train distribution. Optimal Transport is the new We propose using optimal transport to achieve this and demonstrate results on a model used to asses poverty in Africa.
 
-We tackle the problem of unsupervised domain adaptation wherein we assume we are not given the labels of our shifted data. Therefore, we must assume that there exists some nonlinear transformation such that the source domain matches the target domain. By using optimal transport, we assume that the minimal mapping between two distributions is the transformation taken between the distributions. Thus, we use optimal transport to study this domain adaptation.
+# Dataset
+[![](/assets/dataset.png)](https://wilds.stanford.edu/){:target="_blank"}
+- x values
+    - 8 channel satellite images
+        - RGB, Near Infrared, Infrared, Temperature, Nightlight
+    - urban vs. rural
+        - very predictive, so we split between urban and rural in preprocessing step
+- y values
+    - Asset index
+- Domain information
+    - country
 
-# Methods
-## Models
-We wanted to see how domain adaptation using optimal transport would integrate into different machine learning models.
-### Convolutional Neural Network
-We implemented a convolutional neural network to predict the wealth index associated with an 8-channel satellite image.
+![](/assets/asset_index_dist.png){: width="500" }
 
-|<center>8 channel to 48 channel 3x3 convolution</center>|
-|<center>2x2 max pool</center>|
-|<center>48 channel to 96 channel 3x3 convolution</center>|
-|<center>2x2 max pool</center>|
-|<center>96 channel to 1 channel 1x1 convolution</center>|
-|<center>2x2 max pool</center>|
-|<center>2196 to 120 linear layer</center>|
-|<center>120 to 84 linear layer</center>|
-|<center>84 to 1 linear layer</center>|
+# Preprocessing
+- For all domains and models
+    - split the data into “Urban” and “Rural”
+    - image channels already normalized by wilds
+- For target domain
+    - derived classification cutoff values for urban and rural separately
+    - split into 3 classes, each with equal amount of data
+![](/assets/clf_cutoffs.png)
 
-After training on the entire training set, and getting a MSE of .23 after 10 epochs. The variance of wealth index in the training set is .64, meaning without any domain adaptation the CNN could reduce variance by 64%. However, this performance was due to the large training sample size. In order to implement optimal transport for domain adaptation, would have to train on an individual country, and this dataset only has between 600 and 1000 images per country. This means that our performance, event just within that one country would be worse than one network trained on the entire dataset. We also considered training on a set of countries and transporting from any given country to the pixel distribution from the set of multiple countries. However, both the set of training countries and set of validation countries follow the same distribution of pixels anyway, so transporting would be pointless. We took this .23 MSE on the validation set as a benchmark for methods that would be better with optimal transport.
+# ML Model
+We used a convolutional neural network for this classification task. It seemed like an obvious choice as CNNs have led in the field of computer vision for around a decade now. We experiemented with other methods, but weren't able to get them into a usable state. The architecture we used was completely custom, and can been seen below.
+![](/assets/CNN.png)
 
-### Decision Tree
-Our decision tree model is comprised of 4 parts:
-1. Split the data between urban and rural, using given labels
-2. Dimensionality reduction using distance from barycenters
-3. Dimensionality reduction using principal component analysis
-4. random forest of decision tree regressors
+# Training
+To train our model, we first gathered all images from one country (domain). Next, we preprocessed this data, splitting it into images of rural areas and images of urban areas. Finally we trained two convolutional nets to classify the areas captures in these images into three relative wealth categories.
+![Train](/assets/train.png)
 
-The input to this model is quite high, being a 8x224x224 image. In order
-to reduce the dimensionality of the input while maintaining similarity between
-similar images, used the distance from 1000 barycenters that were chosen using
-k-means clustering.
 
-Next, we simply used PCA to reduce the dimension of the input even further.
+# Testing
+To test if optimal transport was an effective method for unsupervised domain adaptation for this task, we first gathered data from a selected source country (source domain). We then used the sinkhorn algorithm to transport the color distributions of these images to fit the distribution of the target county (target domain). Finally, we evaluated our convolutional nets on both the transported and untransported images. The results can be seen in the image below.
+![Testing](/assets/test.png)
 
-Finally, we trained a RandomForestRegressor from sklearn on this modified
-data.
+# Optimal Transport
+Mathematical definitions can be found on our paper.
+In essence, this is how optimal transport works.
+![](/assets/OT_demo.png)
+These images were taken from the Python Optimal Transport documentation [website](https://pythonot.github.io/){:target="_blank"}.
 
-In order to implement domain adaptation using optimal transport, we trained
-the entire model on a single country from the dataset, Angola, and received a
-test MSE of 0.36. Next we used the sinkhorn transport method to optimally
-transport the distribution of pixels from images from another country to the
-distribution of pixels from images from Angola. Then, we would take these
-transported images as input into the model previously described.
+## On our data
+Unlike the example above, we had multiple images per domain. In order to fit the transformation, we sampled points from all images in our source and target domains.
+![](/assets/OT.png)
 
-## Domain Adaptation
-We use Sinkhorn Transport in order find the optimal transport between two distributions, in this case regions of satellite images. Let $$X_s$$ be the source distribution and $$X_t$$ be the target distribution where $$X_s\mathbb{1}_d = 1$$ and $$X_t\mathbb{1}_d = 1$$.
+![](/assets/no_OT.png)
 
-$$U(X_s, X_t) = \{P \in {R}_{+}^{d\times d} \| P{1}_d = Xs, P^T{1_d} = X_t\}$$.
+## Why did the model perform worse with OT?
+1. Color Changes
+    - As seen in the RBG representations above, OT made a lot of the desert area greener to
+match the color distribution of Nigeria. However, the CNN likely associated a green with
+wealth, which led to an incorrect prediction.
 
-Then we define the minimum shift between these distributions as:
+2. Artifacts
+    - Due to the low resolution nightlights channel, OT brings low resolution artifacts into other
+channels (as seen in SWIR1 above) and brings high resolution artifacts to the nightlights
+channel. This potentially creates issues for the convolutions in the CNN as there is a change
+in textures/ distribution of colors.
 
-$$d(X_s, X_t) = \min_{P\in U(X_s, X_t)} <P,C> - \frac{1}{\lambda}h(P)$$
+# Future Work
+Due to the unexpectedly high performance of the CNN on
+this classification task, we think it would be feasible to tackle
+this as a regression problem.
 
-Where $$P$$ is the transportation plan and $$C$$ is the cost matrix based on some distance metric $$d(X_{s_i}, X_{t_j})$$. $$\lambda$$ is defined to be some regularization constant and $$h(P)$$ is defined to be the entropy of the transport map. This addition of the entropy regularization term makes the problem strictly convex and quickly therefore convergent.
- 
-In our case we let the source distribution be satellite images of areas of the country Angola, and the target distribution to be satellite images of other countries in Africa (e.g. Benin). 
-
-The optimal transport fails in this case as it adds a shift to the dataset which makes all of the decisions that the random forest classifier makes either one value i.e. there is not enough variation in the optimal transport, and not at the scale required to have the classifier work properly. In the case of Angola and Benin, we achieved an error rate of .48 with optimal transport and and .36 with no transport. We had similar results for many other pairs of countries.
-
-## Discussion
-After seeing results worse than our simple CNN, we are skeptical if optimal transport, or domain adaptation in general is a good fit for this problem. It seems that most countries follow a certain biome. i.e. rural areas are mostly one color, either green for forest or tan for desert, and urban areas are generally grey or any other colors. A simple CNN is able to make these inferences when given an input of multiples countries that span the different possible biomes.
+We believe we can fix many of the issues we ran into with
+OT. In order to avoid artifacts, we would exclude the
+nightlights channel from OT. It doesn’t really make sense to
+include it in the first place as it is measuring the amount of
+light from a wide area and as a measure, it is already domain
+independent. Another improvement we could make is
+increasing the pixel samples from each domain that OT was
+fitted on. This would significantly increase computation times
+however.
